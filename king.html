@@ -88,6 +88,14 @@
             </div>
         </div>
     </div>
+
+    <footer class="pv4 ph3 ph5-m ph6-l mid-gray pa1">
+      <div class="tc mt3">
+        <a href="http://ewasm.ethereum.org/faucet/" title="Funds" class="f6 dib ph2 link mid-gray dim">Need funds?</a>
+      </div>
+      <small class="f6 db tc"> &copy; 2019 <b class="ttu">Nimplay, the eWasm <strike>Governance</strike> Company </b>, All Rights Reserved</small>
+    </footer>
+
 </body>
 
 <script>
@@ -119,6 +127,9 @@
                 web3.eth.net.getId(function(err, net_id) {
                     if (net_id == 66) {
                         _this.ewasm_testnet_enabled = true
+                        if (!_this.contract) {
+                            _this.setContract();
+                        }
                     }
                 })
             },
