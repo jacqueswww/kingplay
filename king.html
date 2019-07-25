@@ -138,8 +138,6 @@
                 _this.contract.methods.getKingValue().call(
                     {from: web3.eth.accounts[0]},
                     function(error, res) {
-                        console.log(error)
-                        console.log(res)
                         if (!error) {
                             _this.current_king_value  = web3.utils.fromWei(res, 'ether')
                             _this.value = _this.current_king_value
@@ -202,10 +200,10 @@
                 var _this = this;
                 this.contract.events.BecameKing(
                     {
-                        fromBlock: 1060198
+                        fromBlock: 1062067
                     },
-                    function(error, event){
-                        web3.eth.getBlock(1060260, function(err, block) {
+                    function(error, event) {
+                        web3.eth.getBlock(event.blockNumber, function(err, block) {
                             var v = web3.utils.fromWei(event.returnValues.value, 'ether');
                             var name = _this.clean_bytes32(event.returnValues.name)
                             _this.previous_monarchs.push({
@@ -242,7 +240,7 @@
                     function() {
                         _this.getNetwork()
                     },
-                    300
+                    500
                 )
             },
             pollAccount: function() {
@@ -251,7 +249,7 @@
                     function() {
                         _this.getAddress()
                     },
-                    300
+                    500
                 )
             }
         },
