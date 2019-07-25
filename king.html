@@ -1,17 +1,18 @@
 <!DOCTYPE html>
 <html lang="en">
-  <title> </title>
+  <title> King of the Hill </title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
     <script src="https://cdn.jsdelivr.net/npm/vue@2.6.10/dist/vue.js"></script>
-  <link rel="stylesheet" href="/tachyons.min.css">
-    <script src="/web3.min.js"></script>
+  <link rel="stylesheet" href="tachyons.min.css">
+    <script src="web3.min.js"></script>
+    <script src="lodash.js"></script>
 </head>
 <body class="w-100 code">
     <div id="layout" class="w-100">
         <nav class="dt w-100 border-box pa3 ph5-ns">
             <a class="dtc v-mid mid-gray link dim" href="#" title="Home">
                 <img src="crown.png" class="dtc dib w2 h2 br-100" alt="Site Name">
-                <h2 class="dtc dib w6 h2 br-100" >King of the hill</h2>
+                <h2 class="dtc dib w6 h2 br-100" >King of the Hill</h2>
             </a>
             <div class="dtc v-mid w-75 tr">
                 <a class="link dim dark-gray f6 f5-ns dib mr3 mr4-ns">Total Locked up: {{contract_value}} EETH</a>
@@ -21,20 +22,25 @@
         <div v-show="web3_enabled && ewasm_testnet_enabled" class="measure center">
             <div class="pa3">
                 <h2> Challenge <i>{{current_king}}</i> ! </h2>
-                <fieldset class="ba b--transparent ph0 mh0">
-                    <div class="mt3">
-                        <label class="db fw6 lh-copy f6 w-25" for="king_name">Name</label>
-                        <input class="pa2 input-reset ba bg-transparent hover-bg-black hover-white w-100" name="king_name"  id="king_name">
+                <p>Who has offered up {{current_king_value}} EETH to become the reigning king.</p>
+                <fieldset v-show="!transacting" class="ba b--transparent ph0 mh0">
+                    <div class="mt3 cf ph2-ns w-100">
+                        <label class="db pa2 fw6 lh-copy f6 w-25" for="king_name">Name</label>
+                        <input class="pa2 input-reset ba bg-transparent hover-bg-black hover-white w-100" name="king_name" v-model="name">
                     </div>
-                    <div class="mt3">
-                        <label class="db fw6 lh-copy f6 w-25" for="value">Challenge Value</label>
-                        <input class="pa2 input-reset ba bg-transparent hover-bg-black hover-white w-100" name="value"  id="value">
-                        EwasmETH
+                    <div class="mt3 cf ph2-ns w-100">
+                        <label class="db fw6 lh-copy f6 w-100" for="value">Challenge Value</label>
+                        <div class="fl w-100 w-50-ns">
+                            <input class="pa2 input-reset ba bg-transparent hover-bg-black hover-white" name="value" v-model="value" type="number" step=".01">
+                        </div>
+                        <div class="fl w-100 w-50-ns pa2">
+                            <div class="pa2">EwasmETH</div>
+                        </div>
+                    <input class="b ph3 pv2 input-reset ba b--black bg-transparent grow pointer f6 dib w-25-ns pa2" v-on:click="sendTransaction()" value="Become King">
                     </div>
                 </fieldset>
-                <div class="">
-                    <input class="b ph3 pv2 input-reset ba b--black bg-transparent grow pointer f6 dib" type="submit" value="Become King">
-                </div>
+                <div class="pa1" v-show="transacting"><b>Awaiting transaction...</b></div>
+                <div class="pa1" v-show="transact_message"><b>{{transact_message}}</b></div>
             </div>
             <div class="pa3 measure center">
                 <h2> Previous monarchs </h2>
@@ -47,7 +53,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr v-for="m in previous_monarchs">
+                        <tr v-for="m in orderedKings">
                             <td class="pv2 ph3">{{m.date_crowned}}</td>
                             <td class="pv2 ph3">{{m.name}}</td>
                             <td class="pv2 ph3">{{m.value}} EETH</td>
@@ -88,14 +94,24 @@
     var app = new Vue({
         el: '#layout',
         data: {
-            contract_address: "0x73F4887274EF72Dc9317c2Be7AD73227DeEf5478",
+            contract_address: "0x2EFf4cF589EDa5FabAE14D1689fA829b02e994Ed",
             web3_enabled: false,
             ewasm_testnet_enabled: false,
             account_address: '0x00000000000000000000',
+            transacting: false,
+            name: '',
+            value: '0',
             current_king: '<unknown>',
+            current_king_value: '0',
             previous_monarchs: [],
             contract_value: 0,
             contract: null,
+            transact_message: ''
+        },
+        computed: {
+            orderedKings: function () {
+                return _.sortBy(this.previous_monarchs, 'value').reverse()
+            }
         },
         methods: {
             getNetwork: function() {
@@ -111,8 +127,11 @@
                 _this.contract.methods.getKingValue().call(
                     {from: web3.eth.accounts[0]},
                     function(error, res) {
+                        console.log(error)
+                        console.log(res)
                         if (!error) {
-                            _this.current_value  = web3.util.fromWei(res, 'ether')
+                            _this.current_king_value  = web3.utils.fromWei(res, 'ether')
+                            _this.value = _this.current_king_value
                         }
                     }
                 );
@@ -140,6 +159,34 @@
                     }
                 );
             },
+            sendTransaction: function() {
+                if (!this.name) {
+                    this.transact_message = 'No name was set.'
+                    return
+                }
+                if (web3.utils.toWei(this.value, 'ether') <= web3.utils.toWei(this.current_king_value, 'ether')) {
+                    this.transact_message = 'Challenge value has to be greater than current value.'
+                    return
+                }
+
+                var _this = this;
+                this.transacting = true;
+                this.transact_message = '';
+                this.contract.methods.becomeKing(web3.utils.toHex(this.name)).send({
+                    from: this.account_address,
+                    value: web3.utils.toWei(this.value, 'ether'),
+                    gasPrice: web3.utils.toWei('1', 'kwei'),
+                }).on('receipt', function(receipt) {
+                    _this.transact_message = 'Transaction was successful.'
+                    _this.transacting = false;
+                    _this.getKingValue();
+                    _this.getKing();
+                    _this.getContractValue();
+                }).on('error', function() {
+                    _this.transacting = false;
+                    _this.transact_message = 'Transaction failed.'
+                })
+            },
             getPreviousMonarchs: function() {
                 var _this = this;
                 this.contract.events.BecameKing(
@@ -147,22 +194,28 @@
                         fromBlock: 1060198
                     },
                     function(error, event){
-                        console.log(event);
-                        web3.eth.getBlock(1060260, function(err, block) { 
+                        web3.eth.getBlock(1060260, function(err, block) {
+                            var v = web3.utils.fromWei(event.returnValues.value, 'ether');
+                            var name = _this.clean_bytes32(event.returnValues.name)
                             _this.previous_monarchs.push({
-                                name: _this.clean_bytes32(event.returnValues.name),
-                                value: web3.utils.fromWei(event.returnValues.value, 'ether'),
-                                date_crowned: (new Date(block.timestamp * 1000)).toUTCString()
+                                name: name,
+                                value: v,
+                                date_crowned: (new Date(block.timestamp * 1000)).toISOString()
                             })
+                            if (v > this.current_king_value) {
+                                this.current_king_value = v;
+                                this.current_king = name;
+                            }
                         })
                     }
                 )
             },
             setContract: function() {
-                var abi = [{"name":"becomeKing","inputs":[{"name":"name","type":"bytes32"}],"outputs":[],"constant":false,"payable":true,"type":"function"},{"name":"getKing","inputs":[],"outputs":[{"name":"out1","type":"bytes32"}],"constant":false,"payable":false,"type":"function"},{"name":"getKingAddr","inputs":[],"outputs":[{"name":"out1","type":"address"}],"constant":false,"payable":false,"type":"function"},{"name":"getKingValue","inputs":[{"name":"one","type":"uint256"}],"outputs":[{"name":"out1","type":"uint128"}],"constant":false,"payable":false,"type":"function"},{"inputs":[{"name":"name","type":"bytes32","indexed":false},{"name":"value","type":"uint128","indexed":false}],"name":"BecameKing","type":"event","anonymous":false},{"inputs":[{"name":"name","type":"bytes32","indexed":true},{"name":"value","type":"uint128","indexed":true}],"name":"BecameKing2","type":"event","anonymous":false}];
+                var abi = [{"name":"becomeKing","inputs":[{"name":"name","type":"bytes32"}],"outputs":[],"constant":false,"payable":true,"type":"function"},{"name":"getKing","inputs":[],"outputs":[{"name":"out1","type":"bytes32"}],"constant":false,"payable":false,"type":"function"},{"name":"getKingAddr","inputs":[],"outputs":[{"name":"out1","type":"address"}],"constant":false,"payable":false,"type":"function"},{"name":"getKingValue","inputs":[],"outputs":[{"name":"out1","type":"uint128"}],"constant":false,"payable":false,"type":"function"},{"inputs":[{"name":"name","type":"bytes32","indexed":false},{"name":"value","type":"uint128","indexed":false}],"name":"BecameKing","type":"event","anonymous":false},{"inputs":[{"name":"name","type":"bytes32","indexed":true},{"name":"value","type":"uint128","indexed":true}],"name":"BecameKing2","type":"event","anonymous":false}];
                 // contract = web3.eth.contract(abi).at(contract_address)
                 this.contract = new web3.eth.Contract(abi, this.contract_address)
                 this.getKing();
+                this.getKingValue();
                 this.getPreviousMonarchs();
             },
             getContractValue: function() {
