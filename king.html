@@ -4,6 +4,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
     <script src="https://cdn.jsdelivr.net/npm/vue@2.6.10/dist/vue.js"></script>
   <link rel="stylesheet" href="tachyons.min.css">
+    <script src="vue-tabs.js"></script>
     <script src="web3.min.js"></script>
     <script src="lodash.js"></script>
 </head>
@@ -43,6 +44,8 @@
                 <div class="pa1" v-show="transact_message"><b>{{transact_message}}</b></div>
             </div>
             <div class="pa3 measure center">
+            <tabs>
+              <tab name="Previous Monarchs" :selected="true">
                 <h2> Previous monarchs </h2>
                 <table>
                     <thead>
@@ -60,6 +63,41 @@
                         </tr>
                     </tbody>
                 </table>
+              </tab>
+              <tab name="Source">
+                <pre>
+contract("KingOfTheHill"):
+
+  # Globals
+  var
+    king_name: bytes32
+    king_addr: address
+    king_value: wei_value
+    king_else: uint128
+
+  # Events
+  proc BecameKing(name: bytes32, value: uint128) {.event.}
+
+  # Methods
+  proc becomeKing*(name: bytes32) {.payable,self,log,msg.} =
+    if msg.value > self.king_value:
+      self.king_name = name
+      self.king_addr = msg.sender
+      self.king_value = msg.value
+      log.BecameKing2(name, msg.value)
+
+  proc getKing*() {.self.}: bytes32 =
+    self.king_name
+
+  proc getKingAddr*() {.self.}: address =
+    self.king_addr
+
+  proc getKingValue*() {.self.}: wei_value =
+    self.king_value
+                </pre>
+              </tab>
+            </tabs>
+
             </div>
         </div>
         <div class="">
