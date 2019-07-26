@@ -20,52 +20,52 @@
                 <a class="link dim dark-gray f6 f5-ns dib mr3 mr4-ns">Account: {{account_address}}</a>
             </div>
         </nav>
-        <div v-show="web3_enabled && ewasm_testnet_enabled" class="measure center">
-            <div class="pa3">
+        <div v-show="web3_enabled && ewasm_testnet_enabled" class="w-100">
+            <div class="w-50-ns center">
                 <h2> Challenge <i>{{current_king}}</i> ! </h2>
                 <p>Who has offered up {{current_king_value}} EETH to become the reigning king.</p>
-                <fieldset v-show="!transacting" class="ba b--transparent ph0 mh0">
+                <fieldset v-show="!transacting" class="ba b--transparent ph0 mh0 center">
                     <div class="mt3 cf ph2-ns w-100">
-                        <label class="db pa2 fw6 lh-copy f6 w-25" for="king_name">Name</label>
-                        <input class="pa2 input-reset ba bg-transparent hover-bg-black hover-white w-100" name="king_name" v-model="name">
+                        <label class="db pa2 fw6 lh-copy f6 w-50" for="king_name">Name</label>
+                        <input class="pa2 input-reset ba bg-transparent hover-bg-black hover-white" name="king_name" v-model="name">
                     </div>
                     <div class="mt3 cf ph2-ns w-100">
-                        <label class="db fw6 lh-copy f6 w-100" for="value">Challenge Value</label>
-                        <div class="fl w-100 w-50-ns">
+                        <label class="db pa2 fw6 lh-copy f6 w-50 nowrap" for="value">Challenge Value</label>
+                        <div class="w-50">
                             <input class="pa2 input-reset ba bg-transparent hover-bg-black hover-white" name="value" v-model="value" type="number" step=".01">
                         </div>
-                        <div class="fl w-100 w-50-ns pa2">
+                        <div class="w-50 pa2">
                             <div class="pa2">EwasmETH</div>
                         </div>
-                    <input class="b ph3 pv2 input-reset ba b--black bg-transparent grow pointer f6 dib w-25-ns pa2" v-on:click="sendTransaction()" value="Become King">
+                        <input class="b ph3 pv2 input-reset ba b--black bg-transparent grow pointer f6 dib w-20 pa2 tc" v-on:click="sendTransaction()" value="Become King">
                     </div>
                 </fieldset>
                 <div class="pa1" v-show="transacting"><b>Awaiting transaction...</b></div>
                 <div class="pa1" v-show="transact_message"><b>{{transact_message}}</b></div>
             </div>
-            <div class="pa3 measure center">
-            <tabs>
-              <tab name="Previous Monarchs" :selected="true">
-                <h2> Previous monarchs </h2>
-                <table>
-                    <thead>
-                        <tr>
-                            <th class="pv2 ph3 tl f6 fw6 ttu">Date Crowned</th>
-                            <th class="pv2 ph3 tl f6 fw6 ttu">Name</th>
-                            <th class="pv2 ph3 tl f6 fw6 ttu">"Stake"</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr v-for="m in orderedKings">
-                            <td class="pv2 ph3">{{m.date_crowned}}</td>
-                            <td class="pv2 ph3">{{m.name}}</td>
-                            <td class="pv2 ph3">{{m.value}} EETH</td>
-                        </tr>
-                    </tbody>
-                </table>
-              </tab>
-              <tab name="Source">
-                <pre>
+            <div class="w-50-ns center">
+                <tabs>
+                  <tab name="Previous Monarchs" :selected="true">
+                    <h2> Previous monarchs </h2>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th class="pv2 ph3 tl f6 fw6 ttu">Date Crowned</th>
+                                <th class="pv2 ph3 tl f6 fw6 ttu">Name</th>
+                                <th class="pv2 ph3 tl f6 fw6 ttu">"Stake"</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="m in orderedKings">
+                                <td class="pv2 ph3">{{m.date_crowned}}</td>
+                                <td class="pv2 ph3">{{m.name}}</td>
+                                <td class="pv2 ph3">{{m.value}} EETH</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                  </tab>
+                  <tab name="Source">
+                    <pre>
 contract("KingOfTheHill"):
 
   # Globals
@@ -94,10 +94,9 @@ contract("KingOfTheHill"):
 
   proc getKingValue*() {.self.}: wei_value =
     self.king_value
-                </pre>
-              </tab>
-            </tabs>
-
+                    </pre>
+                  </tab>
+                </tabs>
             </div>
         </div>
         <div class="">
