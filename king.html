@@ -3,10 +3,12 @@
   <title> King of the Hill </title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
     <script src="https://cdn.jsdelivr.net/npm/vue@2.6.10/dist/vue.js"></script>
-  <link rel="stylesheet" href="tachyons.min.css">
+    <link rel="stylesheet" href="tachyons.min.css">
+    <link rel="stylesheet" href="prism.css">
     <script src="vue-tabs.js"></script>
     <script src="web3.min.js"></script>
     <script src="lodash.js"></script>
+    <script src="prism.js"></script>
 </head>
 <body class="w-100 code">
     <div id="layout" class="w-100">
@@ -65,36 +67,26 @@
                     </table>
                   </tab>
                   <tab name="Source">
-                    <pre>
+                    <pre><code class="language-nim">
 contract("KingOfTheHill"):
 
   # Globals
   var
-    king_name: bytes32
-    king_addr: address
-    king_value: wei_value
-    king_else: uint128
+    king_name*: bytes32
+    king_addr*: address
+    king_value*: wei_value
 
   # Events
   proc BecameKing(name: bytes32, value: uint128) {.event.}
 
   # Methods
-  proc becomeKing*(name: bytes32) {.payable,self,log,msg.} =
+  proc becomeKing*(name: bytes32) {.payable,self,msg,log.} =
     if msg.value > self.king_value:
       self.king_name = name
       self.king_addr = msg.sender
       self.king_value = msg.value
-      log.BecameKing2(name, msg.value)
-
-  proc getKing*() {.self.}: bytes32 =
-    self.king_name
-
-  proc getKingAddr*() {.self.}: address =
-    self.king_addr
-
-  proc getKingValue*() {.self.}: wei_value =
-    self.king_value
-                    </pre>
+      log.BecameKing(name, msg.value)
+                    </code></pre>
                   </tab>
                 </tabs>
             </div>
@@ -139,7 +131,7 @@ contract("KingOfTheHill"):
     var app = new Vue({
         el: '#layout',
         data: {
-            contract_address: "0x2EFf4cF589EDa5FabAE14D1689fA829b02e994Ed",
+            contract_address: "0x3362F69CCdfCe5bA96f656fAFB72a93829B30213",
             web3_enabled: false,
             ewasm_testnet_enabled: false,
             account_address: '0x00000000000000000000',
@@ -172,7 +164,7 @@ contract("KingOfTheHill"):
             },
             getKingValue: function() {
                 var _this = this;
-                _this.contract.methods.getKingValue().call(
+                _this.contract.methods.king_value().call(
                     {from: web3.eth.accounts[0]},
                     function(error, res) {
                         if (!error) {
@@ -195,7 +187,7 @@ contract("KingOfTheHill"):
             },
             getKing: function() {
                 var _this = this;
-                _this.contract.methods.getKing().call(
+                _this.contract.methods.king_name().call(
                     {from: web3.eth.accounts[0]},
                     function(error, res) {
                         if (!error) {
@@ -248,16 +240,16 @@ contract("KingOfTheHill"):
                                 value: v,
                                 date_crowned: (new Date(block.timestamp * 1000)).toISOString()
                             })
-                            if (v > this.current_king_value) {
-                                this.current_king_value = v;
-                                this.current_king = name;
+                            if (v > _this.current_king_value) {
+                                _this.current_king_value = v;
+                                _this.current_king = name;
                             }
                         })
                     }
                 )
             },
             setContract: function() {
-                var abi = [{"name":"becomeKing","inputs":[{"name":"name","type":"bytes32"}],"outputs":[],"constant":false,"payable":true,"type":"function"},{"name":"getKing","inputs":[],"outputs":[{"name":"out1","type":"bytes32"}],"constant":false,"payable":false,"type":"function"},{"name":"getKingAddr","inputs":[],"outputs":[{"name":"out1","type":"address"}],"constant":false,"payable":false,"type":"function"},{"name":"getKingValue","inputs":[],"outputs":[{"name":"out1","type":"uint128"}],"constant":false,"payable":false,"type":"function"},{"inputs":[{"name":"name","type":"bytes32","indexed":false},{"name":"value","type":"uint128","indexed":false}],"name":"BecameKing","type":"event","anonymous":false},{"inputs":[{"name":"name","type":"bytes32","indexed":true},{"name":"value","type":"uint128","indexed":true}],"name":"BecameKing2","type":"event","anonymous":false}];
+                var abi = [{"name":"king_name","inputs":[],"outputs":[{"name":"out1","type":"bytes32"}],"constant":false,"payable":false,"type":"function"},{"name":"king_addr","inputs":[],"outputs":[{"name":"out1","type":"address"}],"constant":false,"payable":false,"type":"function"},{"name":"king_value","inputs":[],"outputs":[{"name":"out1","type":"uint128"}],"constant":false,"payable":false,"type":"function"},{"name":"becomeKing","inputs":[{"name":"name","type":"bytes32"}],"outputs":[],"constant":false,"payable":true,"type":"function"},{"inputs":[{"name":"name","type":"bytes32","indexed":false},{"name":"value","type":"uint128","indexed":false}],"name":"BecameKing","type":"event","anonymous":false}];
                 // contract = web3.eth.contract(abi).at(contract_address)
                 this.contract = new web3.eth.Contract(abi, this.contract_address)
                 this.getKing();
